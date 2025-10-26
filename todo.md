@@ -1,0 +1,15 @@
+# Project TODO
+
+- [x] Design interactive canvas for stocks and flows diagram
+- [x] Implement stock nodes (rectangles representing accumulations)
+- [x] Implement flow connections (arrows with valves)
+- [x] Add drag-and-drop functionality for nodes
+- [x] Create node editing panel for parameters
+- [x] Implement simulation engine for stocks and flows
+- [x] Add time-based simulation controls (play, pause, reset)
+- [x] Create visual feedback for stock levels during simulation
+- [x] Add ability to save and load models
+- [x] Design responsive UI with modern styling
+- [x] Add example templates for common business models
+- [x] Implement export functionality (diagram as JSON)
+
