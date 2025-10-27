@@ -13,3 +13,7 @@
 - [x] Add example templates for common business models
 - [x] Implement export functionality (diagram as JSON)
 
+
+- [x] Add ability to click and select flows on the canvas
+- [x] Show flow properties in properties panel when flow is selected
+

@@ -64,6 +64,7 @@ export default function Home() {
   const [model, setModel] = useState<Model>(INITIAL_MODEL);
   const [isSimulating, setIsSimulating] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeType, setSelectedNodeType] = useState<'stock' | 'flow' | null>(null);
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
     nodeId: null,
@@ -160,6 +161,7 @@ export default function Home() {
       flows: model.flows.filter(f => f.sourceId !== stockId && f.targetId !== stockId)
     });
     setSelectedNodeId(null);
+    setSelectedNodeType(null);
     toast.success('Stock deleted');
   };
 
@@ -169,15 +171,23 @@ export default function Home() {
       flows: model.flows.filter(f => f.id !== flowId)
     });
     setSelectedNodeId(null);
+    setSelectedNodeType(null);
     toast.success('Flow deleted');
   };
 
   const handleStockClick = (stockId: string) => {
     setSelectedNodeId(stockId);
+    setSelectedNodeType('stock');
+  };
+
+  const handleFlowClick = (flowId: string) => {
+    setSelectedNodeId(flowId);
+    setSelectedNodeType('flow');
   };
 
   const handleCanvasClick = () => {
     setSelectedNodeId(null);
+    setSelectedNodeType(null);
   };
 
   const handleStockDragStart = (stockId: string, offset: Position) => {
@@ -262,8 +272,8 @@ export default function Home() {
     }
   };
 
-  const selectedStock = model.stocks.find(s => s.id === selectedNodeId) || null;
-  const selectedFlow = model.flows.find(f => f.id === selectedNodeId) || null;
+  const selectedStock = selectedNodeType === 'stock' ? model.stocks.find(s => s.id === selectedNodeId) || null : null;
+  const selectedFlow = selectedNodeType === 'flow' ? model.flows.find(f => f.id === selectedNodeId) || null : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -298,7 +308,9 @@ export default function Home() {
             stocks={model.stocks}
             flows={model.flows}
             selectedNodeId={selectedNodeId}
+            selectedNodeType={selectedNodeType}
             onStockClick={handleStockClick}
+            onFlowClick={handleFlowClick}
             onCanvasClick={handleCanvasClick}
             onStockDragStart={handleStockDragStart}
             onStockDrag={handleStockDrag}
@@ -310,6 +322,7 @@ export default function Home() {
           <PropertiesPanel
             selectedStock={selectedStock}
             selectedFlow={selectedFlow}
+            stocks={model.stocks}
             onStockUpdate={handleStockUpdate}
             onFlowUpdate={handleFlowUpdate}
             onStockDelete={handleStockDelete}

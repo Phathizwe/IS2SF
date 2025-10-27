@@ -3,11 +3,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Trash2 } from 'lucide-react';
 
 interface PropertiesPanelProps {
   selectedStock: Stock | null;
   selectedFlow: Flow | null;
+  stocks: Stock[];
   onStockUpdate: (stock: Stock) => void;
   onFlowUpdate: (flow: Flow) => void;
   onStockDelete: (stockId: string) => void;
@@ -17,6 +25,7 @@ interface PropertiesPanelProps {
 export default function PropertiesPanel({
   selectedStock,
   selectedFlow,
+  stocks,
   onStockUpdate,
   onFlowUpdate,
   onStockDelete,
@@ -122,6 +131,52 @@ export default function PropertiesPanel({
               value={selectedFlow.name}
               onChange={(e) => onFlowUpdate({ ...selectedFlow, name: e.target.value })}
             />
+          </div>
+          
+          <div>
+            <Label htmlFor="flow-source">Source Stock</Label>
+            <Select 
+              value={selectedFlow.sourceId || 'external'} 
+              onValueChange={(val) => onFlowUpdate({ 
+                ...selectedFlow, 
+                sourceId: val === 'external' ? null : val 
+              })}
+            >
+              <SelectTrigger id="flow-source">
+                <SelectValue placeholder="Select source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="external">External Source</SelectItem>
+                {stocks.map(stock => (
+                  <SelectItem key={stock.id} value={stock.id}>
+                    {stock.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="flow-target">Target Stock</Label>
+            <Select 
+              value={selectedFlow.targetId || 'external'} 
+              onValueChange={(val) => onFlowUpdate({ 
+                ...selectedFlow, 
+                targetId: val === 'external' ? null : val 
+              })}
+            >
+              <SelectTrigger id="flow-target">
+                <SelectValue placeholder="Select target" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="external">External Sink</SelectItem>
+                {stocks.map(stock => (
+                  <SelectItem key={stock.id} value={stock.id}>
+                    {stock.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div>

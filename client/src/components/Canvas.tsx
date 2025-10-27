@@ -5,7 +5,9 @@ interface CanvasProps {
   stocks: Stock[];
   flows: Flow[];
   selectedNodeId: string | null;
+  selectedNodeType: 'stock' | 'flow' | null;
   onStockClick: (stockId: string) => void;
+  onFlowClick: (flowId: string) => void;
   onCanvasClick: () => void;
   onStockDragStart: (stockId: string, offset: Position) => void;
   onStockDrag: (position: Position) => void;
@@ -20,7 +22,9 @@ export default function Canvas({
   stocks,
   flows,
   selectedNodeId,
+  selectedNodeType,
   onStockClick,
+  onFlowClick,
   onCanvasClick,
   onStockDragStart,
   onStockDrag,
@@ -45,7 +49,7 @@ export default function Canvas({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // Draw flows first (so they appear behind stocks)
-    flows.forEach(flow => drawFlow(ctx, flow, stocks));
+    flows.forEach(flow => drawFlow(ctx, flow, stocks, selectedNodeType === 'flow' && flow.id === selectedNodeId));
     
     // Draw stocks
     stocks.forEach(stock => drawStock(ctx, stock, stock.id === selectedNodeId));
@@ -95,7 +99,7 @@ export default function Canvas({
     ctx.globalAlpha = 1.0;
   };
   
-  const drawFlow = (ctx: CanvasRenderingContext2D, flow: Flow, stocks: Stock[]) => {
+  const drawFlow = (ctx: CanvasRenderingContext2D, flow: Flow, stocks: Stock[], isSelected: boolean) => {
     const sourceStock = flow.sourceId ? stocks.find(s => s.id === flow.sourceId) : null;
     const targetStock = flow.targetId ? stocks.find(s => s.id === flow.targetId) : null;
     
@@ -120,9 +124,9 @@ export default function Canvas({
     }
     
     // Draw arrow
-    ctx.strokeStyle = flow.color;
-    ctx.fillStyle = flow.color;
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = isSelected ? '#000' : flow.color;
+    ctx.fillStyle = isSelected ? '#000' : flow.color;
+    ctx.lineWidth = isSelected ? 5 : 3;
     
     ctx.beginPath();
     ctx.moveTo(startX, startY);
@@ -148,11 +152,51 @@ export default function Canvas({
     const midX = (startX + endX) / 2;
     const midY = (startY + endY) / 2;
     
-    ctx.fillStyle = '#000';
-    ctx.font = '12px sans-serif';
+    ctx.fillStyle = isSelected ? '#000' : '#333';
+    ctx.font = isSelected ? 'bold 12px sans-serif' : '12px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     ctx.fillText(`${flow.name} (${flow.rate}/s)`, midX, midY - 5);
+    
+    // Draw clickable area (invisible)
+    if (isSelected) {
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+    }
+  };
+  
+  const isPointNearLine = (px: number, py: number, x1: number, y1: number, x2: number, y2: number, threshold: number = 10): boolean => {
+    const A = px - x1;
+    const B = py - y1;
+    const C = x2 - x1;
+    const D = y2 - y1;
+    
+    const dot = A * C + B * D;
+    const lenSq = C * C + D * D;
+    let param = -1;
+    
+    if (lenSq !== 0) param = dot / lenSq;
+    
+    let xx, yy;
+    
+    if (param < 0) {
+      xx = x1;
+      yy = y1;
+    } else if (param > 1) {
+      xx = x2;
+      yy = y2;
+    } else {
+      xx = x1 + param * C;
+      yy = y1 + param * D;
+    }
+    
+    const dx = px - xx;
+    const dy = py - yy;
+    return Math.sqrt(dx * dx + dy * dy) < threshold;
   };
   
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -177,6 +221,37 @@ export default function Canvas({
         x: x - clickedStock.position.x,
         y: y - clickedStock.position.y
       });
+      return;
+    }
+    
+    // Check if clicked on a flow
+    const clickedFlow = flows.find(flow => {
+      const sourceStock = flow.sourceId ? stocks.find(s => s.id === flow.sourceId) : null;
+      const targetStock = flow.targetId ? stocks.find(s => s.id === flow.targetId) : null;
+      
+      let startX: number, startY: number, endX: number, endY: number;
+      
+      if (sourceStock) {
+        startX = sourceStock.position.x + STOCK_WIDTH;
+        startY = sourceStock.position.y + STOCK_HEIGHT / 2;
+      } else {
+        startX = 50;
+        startY = targetStock ? targetStock.position.y + STOCK_HEIGHT / 2 : 100;
+      }
+      
+      if (targetStock) {
+        endX = targetStock.position.x;
+        endY = targetStock.position.y + STOCK_HEIGHT / 2;
+      } else {
+        endX = sourceStock ? sourceStock.position.x + STOCK_WIDTH + 150 : 300;
+        endY = startY;
+      }
+      
+      return isPointNearLine(x, y, startX, startY, endX, endY);
+    });
+    
+    if (clickedFlow) {
+      onFlowClick(clickedFlow.id);
     } else {
       onCanvasClick();
     }
