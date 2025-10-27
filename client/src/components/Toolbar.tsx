@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Play, Pause, RotateCcw, Plus, Download, Upload, FileText } from 'lucide-react';
+import { Play, Pause, RotateCcw, Plus, Download, Upload, FileText, FileUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 interface ToolbarProps {
@@ -11,6 +11,7 @@ interface ToolbarProps {
   onExport: () => void;
   onImport: () => void;
   onLoadTemplate: () => void;
+  onUploadDocument: () => void;
   currentTime: number;
 }
 
@@ -23,6 +24,7 @@ export default function Toolbar({
   onExport,
   onImport,
   onLoadTemplate,
+  onUploadDocument,
   currentTime
 }: ToolbarProps) {
   return (
@@ -64,6 +66,10 @@ export default function Toolbar({
           
           {/* Import/Export */}
           <div className="flex items-center gap-1">
+            <Button variant="default" size="sm" onClick={onUploadDocument}>
+              <FileUp className="w-4 h-4" />
+              Upload Report
+            </Button>
             <Button variant="outline" size="sm" onClick={onLoadTemplate}>
               <FileText className="w-4 h-4" />
               Templates

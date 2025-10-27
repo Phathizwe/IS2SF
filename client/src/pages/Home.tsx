@@ -7,9 +7,12 @@ import Toolbar from '@/components/Toolbar';
 import FlowDialog from '@/components/FlowDialog';
 import TemplateDialog from '@/components/TemplateDialog';
 import IncomeStatementPanel from '@/components/IncomeStatementPanel';
+import UploadDialog from '@/components/UploadDialog';
 import { templates } from '@/lib/templates';
 import { toast } from 'sonner';
 import { IncomeStatementLine } from '@/types/model';
+import { parseAnnualReportPDF, generateStocksAndFlows } from '@/lib/aiParser';
+import { parseIncomeStatementCSV } from '@/lib/excelTemplate';
 
 const INITIAL_MODEL: Model = {
   id: 'model-1',
@@ -94,6 +97,7 @@ export default function Home() {
   });
   const [flowDialogOpen, setFlowDialogOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   
   const simulationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -338,6 +342,50 @@ export default function Home() {
     toast.success('Line item deleted');
   };
 
+  const handleUploadDocument = () => {
+    setUploadDialogOpen(true);
+  };
+
+  const handleUploadPDF = async (file: File) => {
+    try {
+      toast.info('Analyzing annual report...');
+      const data = await parseAnnualReportPDF(file);
+      const { stocks, flows, incomeStatement } = generateStocksAndFlows(data);
+      
+      setModel({
+        ...model,
+        stocks,
+        flows,
+        incomeStatement
+      });
+      
+      setUploadDialogOpen(false);
+      toast.success('Model generated from annual report!');
+    } catch (error) {
+      toast.error('Failed to parse PDF. Please try the Excel template instead.');
+    }
+  };
+
+  const handleUploadExcel = async (file: File) => {
+    try {
+      const text = await file.text();
+      const data = parseIncomeStatementCSV(text);
+      const { stocks, flows, incomeStatement } = generateStocksAndFlows(data);
+      
+      setModel({
+        ...model,
+        stocks,
+        flows,
+        incomeStatement
+      });
+      
+      setUploadDialogOpen(false);
+      toast.success('Model generated from income statement!');
+    } catch (error) {
+      toast.error('Failed to parse file. Please check the format.');
+    }
+  };
+
   const selectedStock = selectedNodeType === 'stock' ? model.stocks.find(s => s.id === selectedNodeId) || null : null;
   const selectedFlow = selectedNodeType === 'flow' ? model.flows.find(f => f.id === selectedNodeId) || null : null;
 
@@ -353,6 +401,7 @@ export default function Home() {
           onExport={handleExport}
           onImport={handleImport}
           onLoadTemplate={handleLoadTemplate}
+          onUploadDocument={handleUploadDocument}
           currentTime={model.currentTime}
         />
       </div>
@@ -378,6 +427,12 @@ export default function Home() {
           open={templateDialogOpen}
           onOpenChange={setTemplateDialogOpen}
           onSelectTemplate={handleSelectTemplate}
+        />
+        <UploadDialog
+          open={uploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+          onUploadPDF={handleUploadPDF}
+          onUploadExcel={handleUploadExcel}
         />
         <div className="flex-1 bg-white rounded-lg shadow-lg overflow-hidden">
           <Canvas

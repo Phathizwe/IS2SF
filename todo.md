@@ -29,3 +29,13 @@
 - [x] Calculate and display totals automatically
 - [x] Create default business template with income statement
 
+
+- [x] Create Excel income statement template for download
+- [x] Add upload button for annual report PDF
+- [x] Add upload button for Excel income statement
+- [x] Use AI to extract financial data from PDF annual reports
+- [x] Parse Excel files to extract income statement data
+- [x] Automatically populate income statement panel from uploaded data
+- [x] Automatically generate stocks and flows from income statement data
+- [x] Create intelligent mapping between income statement items and stock types
+
