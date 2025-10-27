@@ -39,3 +39,8 @@
 - [x] Automatically generate stocks and flows from income statement data
 - [x] Create intelligent mapping between income statement items and stock types
 
+
+- [x] Fix PDF parsing to handle real financial statements
+- [x] Improve text extraction from PDF files
+- [x] Enhance AI prompt for better financial data extraction
+

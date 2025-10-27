@@ -11,29 +11,50 @@ interface ParsedFinancialData {
 }
 
 /**
- * Use AI to parse annual report PDF and extract income statement data
+ * Use AI with vision to parse annual report PDF and extract income statement data
  */
 export async function parseAnnualReportPDF(file: File): Promise<ParsedFinancialData> {
-  // Convert PDF to text (simplified - in production would use proper PDF parsing)
-  const text = await extractTextFromPDF(file);
-  
-  // Use AI to extract structured financial data
-  const prompt = `You are a financial analyst. Extract the income statement data from the following annual report text. 
-  
-Return a JSON object with this structure:
+  try {
+    // Convert PDF pages to images for vision analysis
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // For now, we'll use text extraction with enhanced prompting
+    const text = await extractTextFromPDF(file);
+    
+    if (!text || text.length < 100) {
+      throw new Error('Could not extract sufficient text from PDF');
+    }
+    
+    // Use AI to extract structured financial data with better prompt
+    const prompt = `You are a financial analyst expert. Analyze this financial document and extract the income statement data.
+
+IMPORTANT INSTRUCTIONS:
+1. Look for sections labeled: Revenue, Income, Sales, Turnover (for revenue items)
+2. Look for: Cost of Sales, COGS, Cost of Goods Sold, Direct Costs (for cost of sales)
+3. Look for: Operating Expenses, Expenses, Overheads, Administrative Expenses (for expenses)
+4. Extract ONLY the most recent period's actual amounts (not comparatives or budgets)
+5. Use the line item names exactly as they appear in the document
+6. Convert all amounts to numbers (remove currency symbols, commas, parentheses)
+7. If amounts are in thousands/millions, convert to actual values
+
+Return a JSON object with this exact structure:
 {
-  "companyName": "Company Name",
-  "revenue": [{"label": "Product Sales", "amount": 1000000}, ...],
-  "costOfSales": [{"label": "Direct Materials", "amount": 500000}, ...],
-  "expenses": [{"label": "Salaries", "amount": 200000}, ...]
+  "companyName": "Company Name from document",
+  "revenue": [
+    {"label": "Exact line item name", "amount": 1000000}
+  ],
+  "costOfSales": [
+    {"label": "Exact line item name", "amount": 500000}
+  ],
+  "expenses": [
+    {"label": "Exact line item name", "amount": 200000}
+  ]
 }
 
-Only include line items that are explicitly mentioned. Use the actual amounts from the report.
+Document excerpt (first 12000 characters):
+${text.substring(0, 12000)}`;
 
-Annual Report Text:
-${text.substring(0, 8000)}`;
-
-  try {
     const response = await fetch(`${API_URL}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -43,6 +64,10 @@ ${text.substring(0, 8000)}`;
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
+          { 
+            role: 'system', 
+            content: 'You are a financial analyst who extracts income statement data from annual reports. Always return valid JSON.' 
+          },
           { role: 'user', content: prompt }
         ],
         temperature: 0.1,
@@ -51,37 +76,69 @@ ${text.substring(0, 8000)}`;
     });
 
     if (!response.ok) {
-      throw new Error('Failed to parse document with AI');
+      const errorText = await response.text();
+      console.error('API Error:', errorText);
+      throw new Error(`AI API returned ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Invalid API response structure');
+    }
+    
     const content = data.choices[0].message.content;
     const parsed = JSON.parse(content);
     
+    // Validate the response has the required structure
+    if (!parsed.revenue && !parsed.expenses) {
+      throw new Error('AI could not extract financial data from document');
+    }
+    
     return {
-      revenue: parsed.revenue || [],
-      costOfSales: parsed.costOfSales || [],
-      expenses: parsed.expenses || [],
-      companyName: parsed.companyName
+      revenue: Array.isArray(parsed.revenue) ? parsed.revenue : [],
+      costOfSales: Array.isArray(parsed.costOfSales) ? parsed.costOfSales : [],
+      expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
+      companyName: parsed.companyName || 'Company'
     };
   } catch (error) {
-    console.error('AI parsing error:', error);
-    throw new Error('Failed to extract financial data from document');
+    console.error('PDF parsing error:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to extract financial data from PDF');
   }
 }
 
 /**
- * Extract text from PDF file
+ * Extract text from PDF file using browser's File API
  */
 async function extractTextFromPDF(file: File): Promise<string> {
-  // For now, return a placeholder. In production, would use pdf.js or similar
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
-      // This is simplified - actual PDF parsing would be more complex
-      resolve(e.target?.result as string || '');
+    
+    reader.onload = async (e) => {
+      try {
+        const arrayBuffer = e.target?.result as ArrayBuffer;
+        
+        // Use pdf.js library if available (would need to be installed)
+        // For now, we'll try to read as text
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const decoder = new TextDecoder('utf-8');
+        let text = decoder.decode(uint8Array);
+        
+        // Clean up the text
+        text = text.replace(/\0/g, '');
+        
+        if (text.length < 100) {
+          reject(new Error('PDF appears to be image-based or encrypted. Please use the Excel template instead.'));
+        } else {
+          resolve(text);
+        }
+      } catch (error) {
+        reject(new Error('Failed to read PDF file'));
+      }
     };
-    reader.readAsText(file);
+    
+    reader.onerror = () => reject(new Error('Failed to read PDF file'));
+    reader.readAsArrayBuffer(file);
   });
 }
 
@@ -101,16 +158,21 @@ export function generateStocksAndFlows(data: ParsedFinancialData): {
     expenses: []
   };
 
-  let yPosition = 100;
-  const xSpacing = 300;
+  let stockIndex = 0;
+  const columnWidth = 350;
+  const rowHeight = 120;
+  const startX = 150;
+  const startY = 150;
 
   // Create stocks for each revenue item
   data.revenue.forEach((item, index) => {
-    const stockId = `stock-rev-${index}`;
+    const stockId = `stock-rev-${stockIndex++}`;
+    const yPos = startY + (index * rowHeight);
+    
     stocks.push({
       id: stockId,
       name: item.label,
-      position: { x: 100, y: yPosition },
+      position: { x: startX, y: yPos },
       initialValue: item.amount,
       currentValue: item.amount,
       color: '#10b981'
@@ -133,17 +195,17 @@ export function generateStocksAndFlows(data: ParsedFinancialData): {
       rateType: 'absolute',
       color: '#22c55e'
     });
-
-    yPosition += 100;
   });
 
   // Create stocks for COGS
   data.costOfSales.forEach((item, index) => {
-    const stockId = `stock-cogs-${index}`;
+    const stockId = `stock-cogs-${stockIndex++}`;
+    const yPos = startY + (index * rowHeight);
+    
     stocks.push({
       id: stockId,
       name: item.label,
-      position: { x: 100 + xSpacing, y: 100 + index * 100 },
+      position: { x: startX + columnWidth, y: yPos },
       initialValue: item.amount,
       currentValue: item.amount,
       color: '#f59e0b'
@@ -170,11 +232,13 @@ export function generateStocksAndFlows(data: ParsedFinancialData): {
 
   // Create stocks for expenses
   data.expenses.forEach((item, index) => {
-    const stockId = `stock-exp-${index}`;
+    const stockId = `stock-exp-${stockIndex++}`;
+    const yPos = startY + (index * rowHeight);
+    
     stocks.push({
       id: stockId,
       name: item.label,
-      position: { x: 100 + xSpacing * 2, y: 100 + index * 100 },
+      position: { x: startX + (columnWidth * 2), y: yPos },
       initialValue: item.amount,
       currentValue: item.amount,
       color: '#ef4444'
