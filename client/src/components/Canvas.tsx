@@ -156,7 +156,10 @@ export default function Canvas({
     ctx.font = isSelected ? 'bold 12px sans-serif' : '12px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(`${flow.name} (${flow.rate}/s)`, midX, midY - 5);
+    const rateLabel = flow.rateType === 'proportional' 
+      ? `${flow.name} (${flow.rate}×)` 
+      : `${flow.name} (${flow.rate}/s)`;
+    ctx.fillText(rateLabel, midX, midY - 5);
     
     // Draw clickable area (invisible)
     if (isSelected) {

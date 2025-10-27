@@ -29,6 +29,7 @@ export const templates: Record<string, Model> = {
         sourceId: null,
         targetId: 'stock-prospects',
         rate: 50,
+        rateType: 'absolute' as const,
         color: '#8b5cf6'
       },
       {
@@ -36,7 +37,8 @@ export const templates: Record<string, Model> = {
         name: 'Conversion',
         sourceId: 'stock-prospects',
         targetId: 'stock-customers',
-        rate: 10,
+        rate: 0.01,
+        rateType: 'proportional' as const,
         color: '#10b981'
       },
       {
@@ -44,7 +46,8 @@ export const templates: Record<string, Model> = {
         name: 'Churn',
         sourceId: 'stock-customers',
         targetId: null,
-        rate: 5,
+        rate: 0.05,
+        rateType: 'proportional' as const,
         color: '#ef4444'
       }
     ],
@@ -88,6 +91,7 @@ export const templates: Record<string, Model> = {
         sourceId: null,
         targetId: 'stock-raw',
         rate: 20,
+        rateType: 'absolute' as const,
         color: '#6366f1'
       },
       {
@@ -95,7 +99,8 @@ export const templates: Record<string, Model> = {
         name: 'Production Start',
         sourceId: 'stock-raw',
         targetId: 'stock-wip',
-        rate: 15,
+        rate: 0.03,
+        rateType: 'proportional' as const,
         color: '#f59e0b'
       },
       {
@@ -103,7 +108,8 @@ export const templates: Record<string, Model> = {
         name: 'Production Complete',
         sourceId: 'stock-wip',
         targetId: 'stock-finished',
-        rate: 12,
+        rate: 0.06,
+        rateType: 'proportional' as const,
         color: '#14b8a6'
       },
       {
@@ -111,7 +117,8 @@ export const templates: Record<string, Model> = {
         name: 'Sales',
         sourceId: 'stock-finished',
         targetId: null,
-        rate: 10,
+        rate: 0.1,
+        rateType: 'proportional' as const,
         color: '#22c55e'
       }
     ],
@@ -147,6 +154,7 @@ export const templates: Record<string, Model> = {
         sourceId: null,
         targetId: 'stock-ar',
         rate: 100,
+        rateType: 'absolute' as const,
         color: '#22c55e'
       },
       {
@@ -154,7 +162,8 @@ export const templates: Record<string, Model> = {
         name: 'Collections',
         sourceId: 'stock-ar',
         targetId: 'stock-cash',
-        rate: 80,
+        rate: 0.016,
+        rateType: 'proportional' as const,
         color: '#14b8a6'
       },
       {
@@ -163,6 +172,7 @@ export const templates: Record<string, Model> = {
         sourceId: 'stock-cash',
         targetId: null,
         rate: 60,
+        rateType: 'absolute' as const,
         color: '#ef4444'
       }
     ],

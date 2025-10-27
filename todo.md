@@ -17,3 +17,7 @@
 - [x] Add ability to click and select flows on the canvas
 - [x] Show flow properties in properties panel when flow is selected
 
+
+- [x] Fix flow rates to be proportional to source stock quantity
+- [x] Prevent flows from exceeding available stock in source
+

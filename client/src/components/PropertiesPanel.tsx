@@ -134,6 +134,30 @@ export default function PropertiesPanel({
           </div>
           
           <div>
+            <Label htmlFor="flow-rateType">Rate Type</Label>
+            <Select 
+              value={selectedFlow.rateType} 
+              onValueChange={(val: 'absolute' | 'proportional') => onFlowUpdate({ 
+                ...selectedFlow, 
+                rateType: val 
+              })}
+            >
+              <SelectTrigger id="flow-rateType">
+                <SelectValue placeholder="Select rate type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="absolute">Absolute (fixed rate)</SelectItem>
+                <SelectItem value="proportional">Proportional (rate × source)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500 mt-1">
+              {selectedFlow.rateType === 'absolute' 
+                ? 'Fixed rate regardless of source quantity' 
+                : 'Rate multiplied by source stock quantity'}
+            </p>
+          </div>
+          
+          <div>
             <Label htmlFor="flow-source">Source Stock</Label>
             <Select 
               value={selectedFlow.sourceId || 'external'} 
@@ -180,11 +204,13 @@ export default function PropertiesPanel({
           </div>
           
           <div>
-            <Label htmlFor="flow-rate">Rate (units/second)</Label>
+            <Label htmlFor="flow-rate">
+              {selectedFlow.rateType === 'absolute' ? 'Flow Rate (units/second)' : 'Rate per Source Unit'}
+            </Label>
             <Input
               id="flow-rate"
               type="number"
-              step="0.1"
+              step="0.01"
               value={selectedFlow.rate}
               onChange={(e) => onFlowUpdate({ 
                 ...selectedFlow, 

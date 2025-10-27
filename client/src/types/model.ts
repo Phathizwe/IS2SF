@@ -12,12 +12,15 @@ export interface Stock {
   color: string;
 }
 
+export type FlowRateType = 'absolute' | 'proportional';
+
 export interface Flow {
   id: string;
   name: string;
   sourceId: string | null; // null means external source
   targetId: string | null; // null means external sink
-  rate: number; // units per time step
+  rate: number; // units per time step (absolute) or rate per source unit (proportional)
+  rateType: FlowRateType; // 'absolute' for fixed rate, 'proportional' for rate * source quantity
   formula?: string; // optional formula for dynamic rates
   color: string;
 }

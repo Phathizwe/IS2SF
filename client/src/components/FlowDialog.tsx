@@ -36,6 +36,7 @@ export default function FlowDialog({
   const [sourceId, setSourceId] = useState<string | null>(null);
   const [targetId, setTargetId] = useState<string | null>(null);
   const [rate, setRate] = useState(5);
+  const [rateType, setRateType] = useState<'absolute' | 'proportional'>('absolute');
   const [color, setColor] = useState('#6366f1');
 
   const handleCreate = () => {
@@ -48,6 +49,7 @@ export default function FlowDialog({
       sourceId,
       targetId,
       rate,
+      rateType,
       color
     });
 
@@ -56,6 +58,7 @@ export default function FlowDialog({
     setSourceId(null);
     setTargetId(null);
     setRate(5);
+    setRateType('absolute');
     setColor('#6366f1');
     onOpenChange(false);
   };
@@ -116,11 +119,31 @@ export default function FlowDialog({
           </div>
 
           <div>
-            <Label htmlFor="rate">Flow Rate (units/second)</Label>
+            <Label htmlFor="rateType">Rate Type</Label>
+            <Select value={rateType} onValueChange={(val: 'absolute' | 'proportional') => setRateType(val)}>
+              <SelectTrigger id="rateType">
+                <SelectValue placeholder="Select rate type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="absolute">Absolute (fixed rate)</SelectItem>
+                <SelectItem value="proportional">Proportional (rate × source)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500 mt-1">
+              {rateType === 'absolute' 
+                ? 'Fixed rate regardless of source quantity' 
+                : 'Rate multiplied by source stock quantity'}
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="rate">
+              {rateType === 'absolute' ? 'Flow Rate (units/second)' : 'Rate per Source Unit'}
+            </Label>
             <Input
               id="rate"
               type="number"
-              step="0.1"
+              step="0.01"
               value={rate}
               onChange={(e) => setRate(parseFloat(e.target.value) || 0)}
             />

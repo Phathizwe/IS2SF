@@ -37,6 +37,7 @@ const INITIAL_MODEL: Model = {
       sourceId: null,
       targetId: 'stock-1',
       rate: 5,
+      rateType: 'absolute' as const,
       color: '#6366f1'
     },
     {
@@ -44,7 +45,8 @@ const INITIAL_MODEL: Model = {
       name: 'Churn',
       sourceId: 'stock-1',
       targetId: null,
-      rate: 2,
+      rate: 0.02,
+      rateType: 'proportional' as const,
       color: '#ef4444'
     },
     {
@@ -52,7 +54,8 @@ const INITIAL_MODEL: Model = {
       name: 'Sales',
       sourceId: 'stock-1',
       targetId: 'stock-2',
-      rate: 10,
+      rate: 0.1,
+      rateType: 'proportional' as const,
       color: '#f59e0b'
     }
   ],
