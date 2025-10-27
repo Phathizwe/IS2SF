@@ -21,3 +21,11 @@
 - [x] Fix flow rates to be proportional to source stock quantity
 - [x] Prevent flows from exceeding available stock in source
 
+
+- [x] Create income statement panel on left side of interface
+- [x] Add ability to link income statement line items to stocks
+- [x] Implement income statement structure (Income section with Revenue, COGS, Gross Profit)
+- [x] Implement expenses section with multiple expense categories
+- [x] Calculate and display totals automatically
+- [x] Create default business template with income statement
+

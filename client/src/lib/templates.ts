@@ -4,6 +4,18 @@ export const templates: Record<string, Model> = {
   'customer-growth': {
     id: 'template-customer-growth',
     name: 'Customer Growth Model',
+    incomeStatement: {
+      revenue: [
+        { id: 'is-rev-1', label: 'Subscription Revenue', linkedStockId: 'stock-customers', isCalculated: false }
+      ],
+      costOfSales: [
+        { id: 'is-cogs-1', label: 'Customer Acquisition Cost', linkedStockId: null, isCalculated: false }
+      ],
+      expenses: [
+        { id: 'is-exp-1', label: 'Marketing Spend', linkedStockId: null, isCalculated: false },
+        { id: 'is-exp-2', label: 'Customer Support', linkedStockId: null, isCalculated: false }
+      ]
+    },
     stocks: [
       {
         id: 'stock-prospects',
@@ -58,6 +70,19 @@ export const templates: Record<string, Model> = {
   'inventory-management': {
     id: 'template-inventory',
     name: 'Inventory Management',
+    incomeStatement: {
+      revenue: [
+        { id: 'is-rev-1', label: 'Product Sales', linkedStockId: 'stock-finished', isCalculated: false }
+      ],
+      costOfSales: [
+        { id: 'is-cogs-1', label: 'Raw Materials', linkedStockId: 'stock-raw', isCalculated: false },
+        { id: 'is-cogs-2', label: 'Production Labor', linkedStockId: null, isCalculated: false }
+      ],
+      expenses: [
+        { id: 'is-exp-1', label: 'Warehouse Rent', linkedStockId: null, isCalculated: false },
+        { id: 'is-exp-2', label: 'Equipment Maintenance', linkedStockId: null, isCalculated: false }
+      ]
+    },
     stocks: [
       {
         id: 'stock-raw',
@@ -129,6 +154,16 @@ export const templates: Record<string, Model> = {
   'cash-flow': {
     id: 'template-cash',
     name: 'Cash Flow Model',
+    incomeStatement: {
+      revenue: [
+        { id: 'is-rev-1', label: 'Sales Revenue', linkedStockId: 'stock-ar', isCalculated: false }
+      ],
+      costOfSales: [],
+      expenses: [
+        { id: 'is-exp-1', label: 'Operating Expenses', linkedStockId: null, isCalculated: false },
+        { id: 'is-exp-2', label: 'Administrative Costs', linkedStockId: null, isCalculated: false }
+      ]
+    },
     stocks: [
       {
         id: 'stock-cash',

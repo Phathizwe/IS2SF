@@ -25,12 +25,26 @@ export interface Flow {
   color: string;
 }
 
+export interface IncomeStatementLine {
+  id: string;
+  label: string;
+  linkedStockId: string | null;
+  isCalculated: boolean; // true for calculated fields like Gross Profit, Net Income
+}
+
+export interface IncomeStatement {
+  revenue: IncomeStatementLine[];
+  costOfSales: IncomeStatementLine[];
+  expenses: IncomeStatementLine[];
+}
+
 export interface Model {
   id: string;
   name: string;
   stocks: Stock[];
   flows: Flow[];
-  timeStep: number; // simulation time step in seconds
+  incomeStatement: IncomeStatement;
+  timeStep: number;
   currentTime: number;
 }
 

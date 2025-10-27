@@ -6,12 +6,30 @@ import PropertiesPanel from '@/components/PropertiesPanel';
 import Toolbar from '@/components/Toolbar';
 import FlowDialog from '@/components/FlowDialog';
 import TemplateDialog from '@/components/TemplateDialog';
+import IncomeStatementPanel from '@/components/IncomeStatementPanel';
 import { templates } from '@/lib/templates';
 import { toast } from 'sonner';
+import { IncomeStatementLine } from '@/types/model';
 
 const INITIAL_MODEL: Model = {
   id: 'model-1',
   name: 'Business Model',
+  incomeStatement: {
+    revenue: [
+      { id: 'is-rev-1', label: 'Product Sales', linkedStockId: 'stock-2', isCalculated: false },
+      { id: 'is-rev-2', label: 'Service Revenue', linkedStockId: null, isCalculated: false }
+    ],
+    costOfSales: [
+      { id: 'is-cogs-1', label: 'Direct Materials', linkedStockId: null, isCalculated: false },
+      { id: 'is-cogs-2', label: 'Direct Labor', linkedStockId: null, isCalculated: false }
+    ],
+    expenses: [
+      { id: 'is-exp-1', label: 'Staff Salaries', linkedStockId: null, isCalculated: false },
+      { id: 'is-exp-2', label: 'Rent & Utilities', linkedStockId: null, isCalculated: false },
+      { id: 'is-exp-3', label: 'Marketing', linkedStockId: null, isCalculated: false },
+      { id: 'is-exp-4', label: 'Bank Charges', linkedStockId: null, isCalculated: false }
+    ]
+  },
   stocks: [
     {
       id: 'stock-1',
@@ -275,6 +293,51 @@ export default function Home() {
     }
   };
 
+  const handleUpdateIncomeStatementLine = (
+    section: 'revenue' | 'costOfSales' | 'expenses',
+    lineId: string,
+    updates: Partial<IncomeStatementLine>
+  ) => {
+    setModel({
+      ...model,
+      incomeStatement: {
+        ...model.incomeStatement,
+        [section]: model.incomeStatement[section].map(line =>
+          line.id === lineId ? { ...line, ...updates } : line
+        )
+      }
+    });
+  };
+
+  const handleAddIncomeStatementLine = (section: 'revenue' | 'costOfSales' | 'expenses') => {
+    const newLine: IncomeStatementLine = {
+      id: `is-${section}-${Date.now()}`,
+      label: 'New Line Item',
+      linkedStockId: null,
+      isCalculated: false
+    };
+
+    setModel({
+      ...model,
+      incomeStatement: {
+        ...model.incomeStatement,
+        [section]: [...model.incomeStatement[section], newLine]
+      }
+    });
+    toast.success('Line item added');
+  };
+
+  const handleDeleteIncomeStatementLine = (section: 'revenue' | 'costOfSales' | 'expenses', lineId: string) => {
+    setModel({
+      ...model,
+      incomeStatement: {
+        ...model.incomeStatement,
+        [section]: model.incomeStatement[section].filter(line => line.id !== lineId)
+      }
+    });
+    toast.success('Line item deleted');
+  };
+
   const selectedStock = selectedNodeType === 'stock' ? model.stocks.find(s => s.id === selectedNodeId) || null : null;
   const selectedFlow = selectedNodeType === 'flow' ? model.flows.find(f => f.id === selectedNodeId) || null : null;
 
@@ -295,6 +358,16 @@ export default function Home() {
       </div>
       
       <div className="flex-1 flex gap-4 p-4 pt-0 overflow-hidden">
+        <div className="w-80">
+          <IncomeStatementPanel
+            incomeStatement={model.incomeStatement}
+            stocks={model.stocks}
+            onUpdateLine={handleUpdateIncomeStatementLine}
+            onAddLine={handleAddIncomeStatementLine}
+            onDeleteLine={handleDeleteIncomeStatementLine}
+          />
+        </div>
+
         <FlowDialog
           open={flowDialogOpen}
           onOpenChange={setFlowDialogOpen}
