@@ -44,3 +44,7 @@
 - [x] Improve text extraction from PDF files
 - [x] Enhance AI prompt for better financial data extraction
 
+
+- [x] Fix PDF parsing failure for Santam financial statement
+- [x] Test and validate AI extraction with real PDF file
+

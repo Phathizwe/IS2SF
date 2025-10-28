@@ -11,7 +11,7 @@ import UploadDialog from '@/components/UploadDialog';
 import { templates } from '@/lib/templates';
 import { toast } from 'sonner';
 import { IncomeStatementLine } from '@/types/model';
-import { parseAnnualReportPDF, generateStocksAndFlows } from '@/lib/aiParser';
+import { parseAnnualReportPDFWithVision, generateStocksAndFlows } from '@/lib/aiParserVision';
 import { parseIncomeStatementCSV } from '@/lib/excelTemplate';
 
 const INITIAL_MODEL: Model = {
@@ -349,7 +349,7 @@ export default function Home() {
   const handleUploadPDF = async (file: File) => {
     try {
       toast.info('Analyzing annual report...');
-      const data = await parseAnnualReportPDF(file);
+      const data = await parseAnnualReportPDFWithVision(file);
       const { stocks, flows, incomeStatement } = generateStocksAndFlows(data);
       
       setModel({
