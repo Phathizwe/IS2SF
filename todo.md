@@ -50,5 +50,5 @@
 
 
 - [x] Fix API authentication error (401) in PDF parser - Added better error handling and user guidance
-- [ ] Fix React ref warning in Dialog component - Low priority cosmetic warning
+- [x] Fix React ref warning in Dialog component
 
