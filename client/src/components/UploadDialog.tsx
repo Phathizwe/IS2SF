@@ -7,8 +7,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Upload, FileText, Table, Download } from 'lucide-react';
+import { Upload, FileText, Table, Download, FileSearch } from 'lucide-react';
 import { downloadIncomeStatementTemplate } from '@/lib/excelTemplate';
+import { extractIncomeStatementFromPDF } from '@/lib/pdfExtractor';
+import { toast } from 'sonner';
 
 interface UploadDialogProps {
   open: boolean;
@@ -45,6 +47,29 @@ export default function UploadDialog({
     downloadIncomeStatementTemplate();
   };
 
+  const handleExtractFromPDF = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        setUploading(true);
+        try {
+          toast.info('Extracting income statement from PDF...');
+          await extractIncomeStatementFromPDF(file);
+          toast.success('CSV template created! Review and upload it to generate your model.');
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to extract data';
+          toast.error(message);
+        } finally {
+          setUploading(false);
+        }
+      }
+    };
+    input.click();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -72,7 +97,16 @@ export default function UploadDialog({
                 className="w-full"
               >
                 <Download className="w-4 h-4 mr-2" />
-                Download Template
+                Download Blank Template
+              </Button>
+              <Button 
+                onClick={handleExtractFromPDF}
+                variant="outline"
+                className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
+                disabled={uploading}
+              >
+                <FileSearch className="w-4 h-4 mr-2" />
+                {uploading ? 'Extracting...' : 'Extract from PDF'}
               </Button>
               <Button 
                 onClick={handleExcelUpload}
@@ -90,13 +124,17 @@ export default function UploadDialog({
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-          <p className="font-semibold text-blue-900 mb-1">📝 How it works</p>
-          <ol className="text-blue-800 space-y-1 list-decimal list-inside">
-            <li>Click "Download Template" to get the Excel/CSV file</li>
-            <li>Fill in your Revenue, Cost of Sales, and Expenses line items</li>
-            <li>Save and upload the completed file</li>
-            <li>Your stocks & flows diagram will be automatically generated!</li>
-          </ol>
+          <p className="font-semibold text-blue-900 mb-1">📝 Two ways to get started</p>
+          <div className="text-blue-800 space-y-2">
+            <div>
+              <p className="font-medium">Option 1: Manual entry</p>
+              <p className="text-xs">Download blank template → Fill in your data → Upload</p>
+            </div>
+            <div>
+              <p className="font-medium">Option 2: Extract from PDF</p>
+              <p className="text-xs">Upload annual report PDF → Review extracted CSV → Upload</p>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

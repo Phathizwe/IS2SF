@@ -55,3 +55,7 @@
 
 - [x] Fix environment variables not being accessible in client-side code for PDF parsing - Removed PDF upload feature, Excel/CSV template is now the only method
 
+
+- [x] Add "Extract from PDF" button to extract income statement from annual reports
+- [x] Create CSV template from extracted PDF data for user review before upload
+
