@@ -5,8 +5,9 @@
 
 import { Stock, Flow, IncomeStatement } from '@/types/model';
 
-const API_KEY = import.meta.env.VITE_BUILT_IN_FORGE_API_KEY || '';
-const API_URL = import.meta.env.VITE_BUILT_IN_FORGE_API_URL || 'https://api.deepseek.com/v1';
+// Use the built-in Forge API for AI processing
+const API_KEY = import.meta.env.VITE_BUILT_IN_FORGE_API_KEY;
+const API_URL = import.meta.env.VITE_BUILT_IN_FORGE_API_URL;
 
 interface ParsedFinancialData {
   revenue: Array<{ label: string; amount: number }>;
@@ -111,12 +112,18 @@ Return ONLY valid JSON in this exact format:
 Document text (first 15000 chars):
 ${relevantText.substring(0, 15000)}`;
 
+  // Check if API is available
+  if (!API_KEY || !API_URL) {
+    throw new Error('PDF parsing requires AI service. Please use the Excel/CSV template instead for best results.');
+  }
+
   try {
     const response = await fetch(`${API_URL}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
+        'Authorization': `Bearer ${API_KEY}`,
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         model: 'deepseek-chat',
@@ -135,7 +142,13 @@ ${relevantText.substring(0, 15000)}`;
     if (!response.ok) {
       const errorText = await response.text();
       console.error('AI API Error:', response.status, errorText);
-      throw new Error(`AI service error (${response.status}). Please try the Excel template instead.`);
+      
+      // Provide helpful error message
+      if (response.status === 401 || response.status === 403) {
+        throw new Error('PDF parsing is currently unavailable. Please download and use the Excel/CSV template for best results.');
+      } else {
+        throw new Error(`Unable to parse PDF (error ${response.status}). Please use the Excel/CSV template instead.`);
+      }
     }
 
     const data = await response.json();

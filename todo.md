@@ -48,3 +48,7 @@
 - [x] Fix PDF parsing failure for Santam financial statement
 - [x] Test and validate AI extraction with real PDF file
 
+
+- [x] Fix API authentication error (401) in PDF parser - Added better error handling and user guidance
+- [ ] Fix React ref warning in Dialog component - Low priority cosmetic warning
+

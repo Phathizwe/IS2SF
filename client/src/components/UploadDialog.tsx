@@ -71,7 +71,7 @@ export default function UploadDialog({
         <DialogHeader>
           <DialogTitle>Import Financial Data</DialogTitle>
           <DialogDescription>
-            Upload an annual report or income statement to automatically generate your model
+            Upload your financial data to automatically generate your model. <strong>Excel/CSV template recommended</strong> for best results.
           </DialogDescription>
         </DialogHeader>
 
@@ -82,7 +82,7 @@ export default function UploadDialog({
               <FileText className="w-8 h-8 text-blue-600" />
               <div>
                 <h3 className="font-semibold">Annual Report PDF</h3>
-                <p className="text-sm text-gray-500">AI will extract financial data</p>
+                <p className="text-sm text-gray-500">Experimental - may not work for all PDFs</p>
               </div>
             </div>
             <Button 
@@ -104,7 +104,7 @@ export default function UploadDialog({
               <Table className="w-8 h-8 text-green-600" />
               <div>
                 <h3 className="font-semibold">Excel/CSV Template</h3>
-                <p className="text-sm text-gray-500">Structured income statement</p>
+                <p className="text-sm text-green-600 font-medium">✓ Recommended method</p>
               </div>
             </div>
             <div className="space-y-2">
