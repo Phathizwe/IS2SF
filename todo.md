@@ -52,3 +52,6 @@
 - [x] Fix API authentication error (401) in PDF parser - Added better error handling and user guidance
 - [x] Fix React ref warning in Dialog component
 
+
+- [x] Fix environment variables not being accessible in client-side code for PDF parsing - Removed PDF upload feature, Excel/CSV template is now the only method
+

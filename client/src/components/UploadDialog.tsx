@@ -13,35 +13,15 @@ import { downloadIncomeStatementTemplate } from '@/lib/excelTemplate';
 interface UploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUploadPDF: (file: File) => void;
   onUploadExcel: (file: File) => void;
 }
 
 export default function UploadDialog({
   open,
   onOpenChange,
-  onUploadPDF,
   onUploadExcel
 }: UploadDialogProps) {
   const [uploading, setUploading] = useState(false);
-
-  const handlePDFUpload = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.pdf';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        setUploading(true);
-        try {
-          await onUploadPDF(file);
-        } finally {
-          setUploading(false);
-        }
-      }
-    };
-    input.click();
-  };
 
   const handleExcelUpload = () => {
     const input = document.createElement('input');
@@ -71,40 +51,18 @@ export default function UploadDialog({
         <DialogHeader>
           <DialogTitle>Import Financial Data</DialogTitle>
           <DialogDescription>
-            Upload your financial data to automatically generate your model. <strong>Excel/CSV template recommended</strong> for best results.
+            Download the template, fill in your income statement data, then upload to automatically generate your stocks & flows model.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-          {/* PDF Upload */}
-          <div className="border rounded-lg p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <FileText className="w-8 h-8 text-blue-600" />
-              <div>
-                <h3 className="font-semibold">Annual Report PDF</h3>
-                <p className="text-sm text-gray-500">Experimental - may not work for all PDFs</p>
-              </div>
-            </div>
-            <Button 
-              onClick={handlePDFUpload} 
-              disabled={uploading}
-              className="w-full"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              {uploading ? 'Processing...' : 'Upload PDF'}
-            </Button>
-            <p className="text-xs text-gray-500">
-              Upload your company's annual report and AI will automatically extract the income statement and create stocks & flows
-            </p>
-          </div>
-
-          {/* Excel Upload */}
-          <div className="border rounded-lg p-6 space-y-4">
+        <div className="max-w-md mx-auto py-4">
+          {/* Excel Upload - Primary Method */}
+          <div className="border-2 border-green-500 rounded-lg p-6 space-y-4">
             <div className="flex items-center gap-3">
               <Table className="w-8 h-8 text-green-600" />
               <div>
-                <h3 className="font-semibold">Excel/CSV Template</h3>
-                <p className="text-sm text-green-600 font-medium">✓ Recommended method</p>
+                <h3 className="font-semibold text-lg">Income Statement Template</h3>
+                <p className="text-sm text-gray-600">Excel or CSV format</p>
               </div>
             </div>
             <div className="space-y-2">
@@ -132,11 +90,13 @@ export default function UploadDialog({
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-          <p className="font-semibold text-blue-900 mb-1">💡 Pro Tip</p>
-          <p className="text-blue-800">
-            For best results with PDF upload, ensure your annual report has a clear income statement section. 
-            The AI will analyze the document and automatically create appropriate stocks and flows based on your financial data.
-          </p>
+          <p className="font-semibold text-blue-900 mb-1">📝 How it works</p>
+          <ol className="text-blue-800 space-y-1 list-decimal list-inside">
+            <li>Click "Download Template" to get the Excel/CSV file</li>
+            <li>Fill in your Revenue, Cost of Sales, and Expenses line items</li>
+            <li>Save and upload the completed file</li>
+            <li>Your stocks & flows diagram will be automatically generated!</li>
+          </ol>
         </div>
       </DialogContent>
     </Dialog>

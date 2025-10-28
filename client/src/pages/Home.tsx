@@ -431,7 +431,6 @@ export default function Home() {
         <UploadDialog
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
-          onUploadPDF={handleUploadPDF}
           onUploadExcel={handleUploadExcel}
         />
         <div className="flex-1 bg-white rounded-lg shadow-lg overflow-hidden">
