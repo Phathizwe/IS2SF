@@ -59,3 +59,7 @@
 - [x] Add "Extract from PDF" button to extract income statement from annual reports
 - [x] Create CSV template from extracted PDF data for user review before upload
 
+
+- [x] Improve PDF parsing to better detect income statement sections in annual reports
+- [x] Test with Santam financial statement PDF
+

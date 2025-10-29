@@ -42,7 +42,7 @@ async function extractTextFromPDF(file: File): Promise<string> {
  * Parse income statement from extracted text
  */
 function parseIncomeStatement(text: string): ExtractedIncomeStatement {
-  const lines = text.split('\n');
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const result: ExtractedIncomeStatement = {
     companyName: 'Company',
     revenue: [],
@@ -50,73 +50,120 @@ function parseIncomeStatement(text: string): ExtractedIncomeStatement {
     expenses: []
   };
 
-  // Try to find company name
+  // Try to find company name in first 50 lines
   for (let i = 0; i < Math.min(50, lines.length); i++) {
-    const line = lines[i].trim();
-    if (line.toLowerCase().includes('limited') || 
+    const line = lines[i];
+    if ((line.toLowerCase().includes('limited') || 
         line.toLowerCase().includes('inc') ||
-        line.toLowerCase().includes('corporation')) {
+        line.toLowerCase().includes('corporation') ||
+        line.toLowerCase().includes('company')) &&
+        line.length < 100 &&
+        !line.toLowerCase().includes('statement')) {
       result.companyName = line;
       break;
     }
   }
 
-  // Find income statement section
+  // Find income statement section - look for key phrases
   let inIncomeSection = false;
-  let sectionType: 'revenue' | 'cogs' | 'expenses' | null = null;
+  let incomeStartIndex = -1;
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const line = lines[i];
     const lowerLine = line.toLowerCase();
 
     // Detect income statement start
-    if (lowerLine.includes('comprehensive income') || 
+    if (lowerLine.includes('statement of comprehensive income') ||
+        lowerLine.includes('condensed consolidated statement') ||
         lowerLine.includes('income statement') ||
         lowerLine.includes('profit or loss') ||
-        lowerLine.includes('statement of operations')) {
+        (lowerLine.includes('insurance revenue') && !inIncomeSection)) {
       inIncomeSection = true;
-      continue;
+      incomeStartIndex = i;
+      break;
     }
+  }
 
-    if (!inIncomeSection) continue;
+  if (!inIncomeSection) {
+    // Fallback: look for revenue anywhere
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].toLowerCase().includes('revenue') && 
+          !lines[i].toLowerCase().includes('total') &&
+          lines[i].length < 100) {
+        inIncomeSection = true;
+        incomeStartIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (!inIncomeSection || incomeStartIndex === -1) {
+    return result;
+  }
+
+  // Parse the income statement section
+  // Strategy: Look for labels, then search nearby lines for numbers
+  const endIndex = Math.min(incomeStartIndex + 200, lines.length);
+  
+  for (let i = incomeStartIndex; i < endIndex; i++) {
+    const line = lines[i];
+    const lowerLine = line.toLowerCase();
 
     // Stop at certain sections
     if (lowerLine.includes('statement of financial position') ||
         lowerLine.includes('balance sheet') ||
-        lowerLine.includes('cash flow')) {
+        lowerLine.includes('statement of changes') ||
+        (lowerLine.includes('cash flow') && i > incomeStartIndex + 20)) {
       break;
     }
 
-    // Identify revenue items
-    if (lowerLine.includes('revenue') && !lowerLine.includes('total')) {
-      sectionType = 'revenue';
-      const amount = extractAmount(lines, i);
+    // Revenue items
+    if ((lowerLine.includes('revenue') || lowerLine.includes('sales') || lowerLine.includes('income')) &&
+        !lowerLine.includes('total') &&
+        !lowerLine.includes('net') &&
+        !lowerLine.includes('other') &&
+        line.length < 100) {
+      
+      const amount = findNearbyAmount(lines, i);
       if (amount) {
-        result.revenue.push({ label: line, amount });
+        result.revenue.push({ 
+          label: cleanLabel(line), 
+          amount: amount 
+        });
       }
     }
-    // Identify cost of sales
-    else if (lowerLine.includes('cost of') || 
-             lowerLine.includes('insurance service expense') ||
+    // Cost of sales / service expenses
+    else if ((lowerLine.includes('cost of') || 
+             lowerLine.includes('service expense') ||
              lowerLine.includes('claims') ||
-             (lowerLine.includes('expense') && i < lines.length / 3)) {
-      sectionType = 'cogs';
-      const amount = extractAmount(lines, i);
+             lowerLine.includes('cogs')) &&
+             !lowerLine.includes('total') &&
+             line.length < 100) {
+      
+      const amount = findNearbyAmount(lines, i);
       if (amount) {
-        result.costOfSales.push({ label: line, amount });
+        result.costOfSales.push({ 
+          label: cleanLabel(line), 
+          amount: amount 
+        });
       }
     }
-    // Identify expenses
-    else if (lowerLine.includes('expense') || 
-             lowerLine.includes('operating') ||
+    // Operating expenses
+    else if ((lowerLine.includes('operating expense') ||
              lowerLine.includes('admin') ||
              lowerLine.includes('salaries') ||
              lowerLine.includes('depreciation') ||
-             lowerLine.includes('amortisation')) {
-      sectionType = 'expenses';
-      const amount = extractAmount(lines, i);
+             lowerLine.includes('amortisation') ||
+             (lowerLine.includes('expense') && !lowerLine.includes('service') && !lowerLine.includes('finance'))) &&
+             !lowerLine.includes('total') &&
+             line.length < 100) {
+      
+      const amount = findNearbyAmount(lines, i);
       if (amount) {
-        result.expenses.push({ label: line, amount });
+        result.expenses.push({ 
+          label: cleanLabel(line), 
+          amount: amount 
+        });
       }
     }
   }
@@ -125,30 +172,78 @@ function parseIncomeStatement(text: string): ExtractedIncomeStatement {
 }
 
 /**
- * Extract amount from nearby lines
+ * Clean label text
  */
-function extractAmount(lines: string[], index: number): string | null {
-  // Check current line and next few lines for numbers
+function cleanLabel(label: string): string {
+  return label
+    .replace(/^[-–—]\s*/, '') // Remove leading dashes
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim();
+}
+
+/**
+ * Find amount in nearby lines (before or after the label)
+ */
+function findNearbyAmount(lines: string[], index: number): string | null {
+  // Check previous lines first (numbers often appear above labels in tables)
+  for (let i = Math.max(0, index - 5); i < index; i++) {
+    const amount = extractAmountFromLine(lines[i]);
+    if (amount && isReasonableAmount(amount)) {
+      return amount;
+    }
+  }
+  
+  // Then check current and next few lines
   for (let i = index; i < Math.min(index + 5, lines.length); i++) {
-    const line = lines[i].trim();
-    
-    // Look for numbers with spaces (like "27 497") or with parentheses
-    const amountMatch = line.match(/(\(?\d[\d\s,]+\)?)/);
-    if (amountMatch) {
-      let amount = amountMatch[1];
+    const amount = extractAmountFromLine(lines[i]);
+    if (amount && isReasonableAmount(amount)) {
+      return amount;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Extract amount from a line
+ */
+function extractAmountFromLine(line: string): string | null {
+  // Look for numbers with spaces (like "27 497" or "2 468")
+  // or with commas (like "27,497") or parentheses for negatives
+  const patterns = [
+    /(\d[\d\s,]+\d)/,  // Numbers with spaces or commas
+    /\((\d[\d\s,]+\d)\)/,  // Numbers in parentheses (negative)
+    /(\d+)/  // Simple numbers
+  ];
+
+  for (const pattern of patterns) {
+    const match = line.match(pattern);
+    if (match) {
+      let amount = match[1] || match[0];
       // Remove spaces and commas
       amount = amount.replace(/[\s,]/g, '');
-      // Remove parentheses (they indicate negative numbers)
-      const isNegative = amount.includes('(');
-      amount = amount.replace(/[()]/g, '');
       
-      if (amount.length > 0 && !isNaN(Number(amount))) {
+      // Check if it's in parentheses (negative)
+      const isNegative = line.includes('(') && line.includes(')');
+      
+      if (!isNaN(Number(amount))) {
         return isNegative ? `-${amount}` : amount;
       }
     }
   }
   
   return null;
+}
+
+/**
+ * Check if amount is reasonable (not a year, page number, etc.)
+ */
+function isReasonableAmount(amount: string): boolean {
+  const num = Math.abs(Number(amount));
+  // Exclude years (2024, 2025, etc.) and small page numbers
+  if (num >= 1900 && num <= 2100) return false;
+  if (num < 10) return false;
+  return true;
 }
 
 /**
@@ -175,7 +270,8 @@ function generateCSV(data: ExtractedIncomeStatement): string {
   lines.push('# Cost of Sales');
   if (data.costOfSales.length > 0) {
     data.costOfSales.forEach(item => {
-      lines.push(`Cost of Sales,${escapeCSV(item.label)},${Math.abs(Number(item.amount))}`);
+      const absAmount = Math.abs(Number(item.amount));
+      lines.push(`Cost of Sales,${escapeCSV(item.label)},${absAmount}`);
     });
   } else {
     lines.push('Cost of Sales,Cost of Goods Sold,0');
@@ -186,7 +282,8 @@ function generateCSV(data: ExtractedIncomeStatement): string {
   lines.push('# Expenses');
   if (data.expenses.length > 0) {
     data.expenses.forEach(item => {
-      lines.push(`Expenses,${escapeCSV(item.label)},${Math.abs(Number(item.amount))}`);
+      const absAmount = Math.abs(Number(item.amount));
+      lines.push(`Expenses,${escapeCSV(item.label)},${absAmount}`);
     });
   } else {
     lines.push('Expenses,Operating Expenses,0');
