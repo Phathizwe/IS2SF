@@ -63,3 +63,24 @@
 - [x] Improve PDF parsing to better detect income statement sections in annual reports
 - [x] Test with Santam financial statement PDF
 
+
+
+## New Feature: Business Health Dashboard Platform
+
+- [x] Create new landing page with annual report upload as primary entry point
+- [x] Dashboard 1: Condensed Profit & Loss (P&L) with custom periods (YTD, trailing 12 months, annual, quarterly, monthly)
+- [x] Dashboard 2: Balance Sheet (Assets, Liabilities, Owner's Equity)
+- [ ] Dashboard 3: Statement of Cash Flows (Operating, Investing, Financing activities)
+- [ ] Dashboard 4: Three-Statement Model (P&L, Balance Sheet, Cash Flows stacked)
+- [ ] Dashboard 5: Comparison Financials (Current vs Prior Period/Year with delta and % variance)
+- [ ] Dashboard 6: KPI Dashboard (8 key metrics with conditional formatting)
+- [ ] Dashboard 7: Budget vs Actuals Report with variance analysis
+- [ ] Dashboard 8: Cash Runway Dashboard (projected cash out date with visual alerts)
+- [ ] Dashboard 9: Margins Dashboard (Revenue, Trailing 12 months, all margins)
+- [ ] Dashboard 10: Non-GAAP Metrics Dashboard (MRR, SaaS metrics, custom metrics)
+- [ ] Create navigation from dashboards to stocks & flows modeler
+- [ ] Extract financial data from uploaded annual reports to populate dashboards
+- [ ] Add period selector (month, quarter, YTD, trailing 12 months, annual)
+- [ ] Implement conditional formatting for positive/negative variances
+- [ ] Add doughnut charts for budget variance visualization
+
