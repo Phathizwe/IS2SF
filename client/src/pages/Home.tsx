@@ -390,8 +390,9 @@ export default function Home() {
   const selectedFlow = selectedNodeType === 'flow' ? model.flows.find(f => f.id === selectedNodeId) || null : null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
-      <div className="p-4">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden', background: '#070A10' }}>
+      {/* Header */}
+      <header style={{ flexShrink: 0, height: 54, background: '#0E1219', borderBottom: '1px solid #1E2535', zIndex: 100 }}>
         <Toolbar
           isSimulating={isSimulating}
           onPlayPause={handlePlayPause}
@@ -404,10 +405,17 @@ export default function Home() {
           onUploadDocument={handleUploadDocument}
           currentTime={model.currentTime}
         />
-      </div>
-      
-      <div className="flex-1 flex gap-4 p-4 pt-0 overflow-hidden">
-        <div className="w-80">
+      </header>
+
+      {/* Main area */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        {/* Left sidebar — Income Statement */}
+        <aside style={{
+          width: 270, flexShrink: 0,
+          background: '#0E1219', borderRight: '1px solid #1E2535',
+          overflowY: 'auto', overflowX: 'hidden',
+          scrollbarWidth: 'thin',
+        }}>
           <IncomeStatementPanel
             incomeStatement={model.incomeStatement}
             stocks={model.stocks}
@@ -415,8 +423,9 @@ export default function Home() {
             onAddLine={handleAddIncomeStatementLine}
             onDeleteLine={handleDeleteIncomeStatementLine}
           />
-        </div>
+        </aside>
 
+        {/* Dialogs — no layout impact */}
         <FlowDialog
           open={flowDialogOpen}
           onOpenChange={setFlowDialogOpen}
@@ -433,7 +442,9 @@ export default function Home() {
           onOpenChange={setUploadDialogOpen}
           onUploadExcel={handleUploadExcel}
         />
-        <div className="flex-1 bg-white rounded-lg shadow-lg overflow-hidden">
+
+        {/* Canvas */}
+        <main style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
           <Canvas
             stocks={model.stocks}
             flows={model.flows}
@@ -446,9 +457,15 @@ export default function Home() {
             onStockDrag={handleStockDrag}
             onStockDragEnd={handleStockDragEnd}
           />
-        </div>
-        
-        <div className="w-80">
+        </main>
+
+        {/* Right sidebar — Properties inspector */}
+        <aside style={{
+          width: 260, flexShrink: 0,
+          background: '#0E1219', borderLeft: '1px solid #1E2535',
+          overflowY: 'auto', overflowX: 'hidden',
+          scrollbarWidth: 'thin',
+        }}>
           <PropertiesPanel
             selectedStock={selectedStock}
             selectedFlow={selectedFlow}
@@ -458,7 +475,7 @@ export default function Home() {
             onStockDelete={handleStockDelete}
             onFlowDelete={handleFlowDelete}
           />
-        </div>
+        </aside>
       </div>
     </div>
   );

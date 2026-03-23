@@ -1,8 +1,4 @@
 import { Stock, Flow } from '@/types/model';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -11,6 +7,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Trash2 } from 'lucide-react';
+import React from 'react';
 
 interface PropertiesPanelProps {
   selectedStock: Stock | null;
@@ -22,6 +19,70 @@ interface PropertiesPanelProps {
   onFlowDelete: (flowId: string) => void;
 }
 
+// Shared style helpers
+const LABEL_STYLE: React.CSSProperties = {
+  fontFamily: '"DM Mono",monospace', fontSize: 9,
+  letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+  color: '#4A566A', marginBottom: 4,
+};
+const VALUE_STYLE: React.CSSProperties = {
+  fontFamily: '"DM Mono",monospace', fontSize: 11,
+  color: '#EDF2FF',
+};
+const INPUT_STYLE: React.CSSProperties = {
+  width: '100%', padding: '6px 8px',
+  background: '#171D28', border: '1px solid #1E2535',
+  borderRadius: 5, color: '#EDF2FF',
+  fontFamily: '"DM Mono",monospace', fontSize: 11,
+  outline: 'none',
+};
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={LABEL_STYLE}>{label}</div>
+      {children}
+    </div>
+  );
+}
+
+function TextInput({ value, onChange, type = 'text', readOnly = false }: {
+  value: string | number;
+  onChange?: (v: string) => void;
+  type?: string;
+  readOnly?: boolean;
+}) {
+  return (
+    <input
+      type={type}
+      value={value}
+      readOnly={readOnly}
+      onChange={e => onChange?.(e.target.value)}
+      style={{ ...INPUT_STYLE, opacity: readOnly ? 0.5 : 1 }}
+    />
+  );
+}
+
+function DeleteBtn({ onClick }: { onClick: () => void }) {
+  const [hov, setHov] = React.useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        padding: '4px 8px', borderRadius: 5, cursor: 'pointer',
+        background: hov ? 'rgba(224,82,82,0.15)' : 'transparent',
+        border: '1px solid rgba(224,82,82,0.4)',
+        color: '#E05252', display: 'flex', alignItems: 'center', gap: 4,
+        fontFamily: '"DM Mono",monospace', fontSize: 9,
+      }}
+    >
+      <Trash2 size={10} /> Delete
+    </button>
+  );
+}
+
 export default function PropertiesPanel({
   selectedStock,
   selectedFlow,
@@ -29,211 +90,184 @@ export default function PropertiesPanel({
   onStockUpdate,
   onFlowUpdate,
   onStockDelete,
-  onFlowDelete
+  onFlowDelete,
 }: PropertiesPanelProps) {
+  const panelStyle: React.CSSProperties = {
+    height: '100%', display: 'flex', flexDirection: 'column',
+  };
+
+  const headerStyle: React.CSSProperties = {
+    padding: '12px 14px', borderBottom: '1px solid #1E2535',
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+  };
+
+  const bodyStyle: React.CSSProperties = {
+    padding: 14, flex: 1, overflowY: 'auto' as const,
+  };
+
+  const titleStyle: React.CSSProperties = {
+    fontFamily: '"Syne",sans-serif', fontSize: 13, fontWeight: 600, color: '#EDF2FF',
+  };
+
+  const badgeStyle = (color: string): React.CSSProperties => ({
+    fontFamily: '"DM Mono",monospace', fontSize: 9,
+    padding: '2px 8px', borderRadius: 10,
+    background: '#171D28', border: `1px solid ${color}`,
+    color: '#8A97B0',
+  });
+
   if (!selectedStock && !selectedFlow) {
     return (
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle>Properties</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-500">Select a stock or flow to edit its properties</p>
-        </CardContent>
-      </Card>
+      <div style={panelStyle}>
+        <div style={headerStyle}>
+          <span style={titleStyle}>Inspector</span>
+        </div>
+        <div style={{
+          ...bodyStyle,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 28, color: '#2E3A4E', marginBottom: 8 }}>◆</div>
+          <div style={{ fontSize: 11, color: '#4A566A', lineHeight: 1.5 }}>
+            Click any element on the canvas to inspect its properties
+          </div>
+        </div>
+      </div>
     );
   }
 
   if (selectedStock) {
     return (
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Stock Properties
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => onStockDelete(selectedStock.id)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="stock-name">Name</Label>
-            <Input
-              id="stock-name"
+      <div style={panelStyle}>
+        <div style={headerStyle}>
+          <span style={titleStyle}>Inspector</span>
+          <span style={badgeStyle('#1F4788')}>STOCK</span>
+        </div>
+        <div style={bodyStyle}>
+          <Field label="Name">
+            <TextInput
               value={selectedStock.name}
-              onChange={(e) => onStockUpdate({ ...selectedStock, name: e.target.value })}
+              onChange={v => onStockUpdate({ ...selectedStock, name: v })}
             />
-          </div>
-          
-          <div>
-            <Label htmlFor="stock-initial">Initial Value</Label>
-            <Input
-              id="stock-initial"
+          </Field>
+          <Field label="Initial Value">
+            <TextInput
               type="number"
               value={selectedStock.initialValue}
-              onChange={(e) => onStockUpdate({ 
-                ...selectedStock, 
-                initialValue: parseFloat(e.target.value) || 0 
-              })}
+              onChange={v => onStockUpdate({ ...selectedStock, initialValue: parseFloat(v) || 0 })}
             />
-          </div>
-          
-          <div>
-            <Label htmlFor="stock-current">Current Value</Label>
-            <Input
-              id="stock-current"
+          </Field>
+          <Field label="Current Value">
+            <TextInput
               type="number"
               value={selectedStock.currentValue.toFixed(2)}
               readOnly
-              disabled
             />
-          </div>
-          
-          <div>
-            <Label htmlFor="stock-color">Color</Label>
-            <Input
-              id="stock-color"
+          </Field>
+          <Field label="Fill Level">
+            <div style={{ ...VALUE_STYLE, color: '#8A97B0' }}>
+              {selectedStock.initialValue > 0
+                ? `${Math.min(100, (selectedStock.currentValue / (selectedStock.initialValue * 2)) * 100).toFixed(0)}%`
+                : 'N/A'}
+            </div>
+          </Field>
+          <Field label="Color">
+            <input
               type="color"
               value={selectedStock.color}
-              onChange={(e) => onStockUpdate({ ...selectedStock, color: e.target.value })}
-              className="h-10"
+              onChange={e => onStockUpdate({ ...selectedStock, color: e.target.value })}
+              style={{ ...INPUT_STYLE, height: 34, padding: '2px 4px', cursor: 'pointer' }}
             />
+          </Field>
+          <div style={{ marginTop: 16 }}>
+            <DeleteBtn onClick={() => onStockDelete(selectedStock.id)} />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (selectedFlow) {
     return (
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Flow Properties
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => onFlowDelete(selectedFlow.id)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="flow-name">Name</Label>
-            <Input
-              id="flow-name"
+      <div style={panelStyle}>
+        <div style={headerStyle}>
+          <span style={titleStyle}>Inspector</span>
+          <span style={badgeStyle('#27AE60')}>FLOW</span>
+        </div>
+        <div style={bodyStyle}>
+          <Field label="Name">
+            <TextInput
               value={selectedFlow.name}
-              onChange={(e) => onFlowUpdate({ ...selectedFlow, name: e.target.value })}
+              onChange={v => onFlowUpdate({ ...selectedFlow, name: v })}
             />
-          </div>
-          
-          <div>
-            <Label htmlFor="flow-rateType">Rate Type</Label>
-            <Select 
-              value={selectedFlow.rateType} 
-              onValueChange={(val: 'absolute' | 'proportional') => onFlowUpdate({ 
-                ...selectedFlow, 
-                rateType: val 
-              })}
+          </Field>
+          <Field label="Rate Type">
+            <Select
+              value={selectedFlow.rateType}
+              onValueChange={(val: 'absolute' | 'proportional') =>
+                onFlowUpdate({ ...selectedFlow, rateType: val })
+              }
             >
-              <SelectTrigger id="flow-rateType">
-                <SelectValue placeholder="Select rate type" />
+              <SelectTrigger style={{ ...INPUT_STYLE, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="absolute">Absolute (fixed rate)</SelectItem>
                 <SelectItem value="proportional">Proportional (rate × source)</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-gray-500 mt-1">
-              {selectedFlow.rateType === 'absolute' 
-                ? 'Fixed rate regardless of source quantity' 
-                : 'Rate multiplied by source stock quantity'}
-            </p>
-          </div>
-          
-          <div>
-            <Label htmlFor="flow-source">Source Stock</Label>
-            <Select 
-              value={selectedFlow.sourceId || 'external'} 
-              onValueChange={(val) => onFlowUpdate({ 
-                ...selectedFlow, 
-                sourceId: val === 'external' ? null : val 
-              })}
+          </Field>
+          <Field label="Source Stock">
+            <Select
+              value={selectedFlow.sourceId || 'external'}
+              onValueChange={val => onFlowUpdate({ ...selectedFlow, sourceId: val === 'external' ? null : val })}
             >
-              <SelectTrigger id="flow-source">
-                <SelectValue placeholder="Select source" />
+              <SelectTrigger style={{ ...INPUT_STYLE, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="external">External Source</SelectItem>
-                {stocks.map(stock => (
-                  <SelectItem key={stock.id} value={stock.id}>
-                    {stock.name}
-                  </SelectItem>
-                ))}
+                {stocks.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
               </SelectContent>
             </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="flow-target">Target Stock</Label>
-            <Select 
-              value={selectedFlow.targetId || 'external'} 
-              onValueChange={(val) => onFlowUpdate({ 
-                ...selectedFlow, 
-                targetId: val === 'external' ? null : val 
-              })}
+          </Field>
+          <Field label="Target Stock">
+            <Select
+              value={selectedFlow.targetId || 'external'}
+              onValueChange={val => onFlowUpdate({ ...selectedFlow, targetId: val === 'external' ? null : val })}
             >
-              <SelectTrigger id="flow-target">
-                <SelectValue placeholder="Select target" />
+              <SelectTrigger style={{ ...INPUT_STYLE, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="external">External Sink</SelectItem>
-                {stocks.map(stock => (
-                  <SelectItem key={stock.id} value={stock.id}>
-                    {stock.name}
-                  </SelectItem>
-                ))}
+                {stocks.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
               </SelectContent>
             </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="flow-rate">
-              {selectedFlow.rateType === 'absolute' ? 'Flow Rate (units/second)' : 'Rate per Source Unit'}
-            </Label>
-            <Input
-              id="flow-rate"
+          </Field>
+          <Field label={selectedFlow.rateType === 'absolute' ? 'Rate (units/s)' : 'Rate per Source Unit'}>
+            <TextInput
               type="number"
-              step="0.01"
               value={selectedFlow.rate}
-              onChange={(e) => onFlowUpdate({ 
-                ...selectedFlow, 
-                rate: parseFloat(e.target.value) || 0 
-              })}
+              onChange={v => onFlowUpdate({ ...selectedFlow, rate: parseFloat(v) || 0 })}
             />
-          </div>
-          
-          <div>
-            <Label htmlFor="flow-color">Color</Label>
-            <Input
-              id="flow-color"
+          </Field>
+          <Field label="Color">
+            <input
               type="color"
               value={selectedFlow.color}
-              onChange={(e) => onFlowUpdate({ ...selectedFlow, color: e.target.value })}
-              className="h-10"
+              onChange={e => onFlowUpdate({ ...selectedFlow, color: e.target.value })}
+              style={{ ...INPUT_STYLE, height: 34, padding: '2px 4px', cursor: 'pointer' }}
             />
+          </Field>
+          <div style={{ marginTop: 16 }}>
+            <DeleteBtn onClick={() => onFlowDelete(selectedFlow.id)} />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return null;
 }
-
